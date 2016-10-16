@@ -3,6 +3,7 @@ package readinglist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -16,19 +17,20 @@ import java.util.List;
 @RequestMapping ("/readingList")
 public class ReadingListController {
 
-    private static final String reader = "craig";
+    private static final String defaultReader = "Hatoriz";
 
     private ReadingListRepository readingListRepository;
 
     @Autowired
-    public ReadingListController(ReadingListRepository readingListRepository) {
+    ReadingListController(ReadingListRepository readingListRepository) {
         this.readingListRepository = readingListRepository;
     }
 
-    @RequestMapping(method= RequestMethod.GET)
+
+    @RequestMapping(method=RequestMethod.GET)
     public String readersBooks(Model model) {
 
-        List<Book> readingList = readingListRepository.findByReader(reader);
+        List<Book> readingList = readingListRepository.findByReader(defaultReader);
         if (readingList != null) {
             model.addAttribute("books", readingList);
         }
@@ -37,9 +39,30 @@ public class ReadingListController {
 
     @RequestMapping(method=RequestMethod.POST)
     public String addToReadingList(Book book) {
-        book.setReader(reader);
+        book.setReader(defaultReader);
         readingListRepository.save(book);
         return "redirect:/readingList";
     }
+
+    @RequestMapping(value="/{reader}", method=RequestMethod.GET)
+    public String readersBooks(
+            @PathVariable("reader") String reader, Model model) {
+
+        List<Book> readingList = readingListRepository.findByReader(reader);
+
+        if (readingList != null) {
+            model.addAttribute("books", readingList);
+        }
+        return "readingList";
+    }
+
+    @RequestMapping(value="/{reader}", method=RequestMethod.POST)
+    public String addToReadingList(
+            @PathVariable("reader") String reader, Book book) {
+        book.setReader(reader);
+        readingListRepository.save(book);
+        return "redirect:/{reader}";
+    }
+
 
 }
